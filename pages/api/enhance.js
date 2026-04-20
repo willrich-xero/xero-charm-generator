@@ -1,28 +1,31 @@
-const PORTKEY_BASE = 'https://api.portkey.ai/v1'
-const MODEL = 'claude-sonnet-4-6'
+const PORTKEY_BASE = 'http://llm-gateway.xgw.xero-test.com/v1'
+const MODEL = "@bedrock/global.anthropic.claude-sonnet-4-6"
 
 async function callClaude(systemPrompt, userMessage) {
   if (!process.env.PORTKEY_API_KEY) throw new Error('PORTKEY_API_KEY not configured')
 
-  const res = await fetch(`${PORTKEY_BASE}/messages`, {
+ const res = await fetch(`${PORTKEY_BASE}/messages`, {
     method: 'POST',
-    headers: {
-      'x-portkey-api-key': process.env.PORTKEY_API_KEY,
-      'x-portkey-provider': 'anthropic',
-      'Content-Type': 'application/json',
-    },
+	headers: {
+	  'x-portkey-api-key': process.env.PORTKEY_API_KEY,
+	  'x-portkey-provider': 'bedrock',
+	  'anthropic-version': '2023-06-01',
+	  'Content-Type': 'application/json',
+	},
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
+	model: MODEL,
+	max_tokens: 1024,
+	messages: [
+		{ role: 'user', content: `${systemPrompt}\n\n${userMessage}` },
+	],
+	}),
   })
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error?.message || `Portkey error: ${res.status}`)
-  }
+if (!res.ok) {
+  const err = await res.json().catch(() => ({}))
+  console.log('Portkey 400 detail:', JSON.stringify(err, null, 2))
+  throw new Error(err.error?.message || `Portkey error: ${res.status}`)
+}
 
   const data = await res.json()
   return data.content[0].text
