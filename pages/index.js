@@ -55,7 +55,7 @@ const COLOUR_LABEL_TO_ID = {
 }
 
 const EXAMPLE_SUBJECTS = ['piggy bank', 'alarm clock', 'house', 'rocket ship', 'trophy', 'plant']
-const LOADING_MESSAGES = ['Assembling your charm prompt…', 'Uploading reference image…', 'Generating your charms…', 'Almost there…']
+const LOADING_MESSAGES = ['Preparing reference image…', 'Starting generation…', 'Generating your charms…', 'Finishing up…']
 
 export default function Home() {
   const [subject, setSubject] = useState('')
@@ -73,6 +73,7 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [lightboxImage, setLightboxImage] = useState(null)
   const [loadingStep, setLoadingStep] = useState(0)
+  const [progress, setProgress] = useState(0)
   const [fullPrompt, setFullPrompt] = useState(null)
   const [promptExpanded, setPromptExpanded] = useState(false)
   const [enhancePrompt, setEnhancePrompt] = useState(null)
@@ -145,16 +146,17 @@ export default function Home() {
     setFullPrompt(null)
     setPromptExpanded(false)
     setLoadingStep(0)
-
-    const stepInterval = setInterval(() => {
-      setLoadingStep(s => Math.min(s + 1, 3))
-    }, 7000)
+    setProgress(0)
 
     try {
+      // Step 1 — upload reference image
+      setLoadingStep(0)
       const referenceImageUrl = await getCharmImageUrl(selectedCharm)
-      const colourConfig = COLOUR_OPTIONS.find(c => c.id === selectedColour)
 
-      const res = await fetch('/api/generate', {
+      // Step 2 — start generation run
+      setLoadingStep(1)
+      const colourConfig = COLOUR_OPTIONS.find(c => c.id === selectedColour)
+      const startRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,14 +167,39 @@ export default function Home() {
         }),
       })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Generation failed')
-      setImages(data.images)
-      if (data.prompt) setFullPrompt(data.prompt)
+      const startData = await startRes.json()
+      if (!startRes.ok) throw new Error(startData.error || 'Failed to start generation')
+      if (startData.prompt) setFullPrompt(startData.prompt)
+
+      const { runId } = startData
+      setLoadingStep(2)
+
+      // Step 3 — poll from browser until complete
+      let attempts = 0
+      const maxAttempts = 80 // 80 x 3s = 4 minutes
+      while (attempts < maxAttempts) {
+        await new Promise(r => setTimeout(r, 3000))
+        const pollRes = await fetch(`/api/poll?runId=${runId}`)
+        const pollData = await pollRes.json()
+
+        if (pollData.progress) setProgress(pollData.progress)
+
+        if (pollData.status === 'completed') {
+          setImages(pollData.images)
+          setLoadingStep(3)
+          return
+        }
+
+        if (pollData.status === 'failed') {
+          throw new Error(pollData.error || 'Generation failed')
+        }
+
+        attempts++
+      }
+      throw new Error('Generation timed out — please try again')
     } catch (err) {
       setError(err.message)
     } finally {
-      clearInterval(stepInterval)
       setLoading(false)
     }
   }
@@ -448,7 +475,14 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <p className={styles.loadingNote}>This usually takes 20–40 seconds</p>
+              {progress > 0 && (
+                <div className={styles.progressBar}>
+                  <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+                </div>
+              )}
+              <p className={styles.loadingNote}>
+                {progress > 0 ? `${progress}% complete` : 'This usually takes 30–90 seconds'}
+              </p>
             </div>
           )}
 

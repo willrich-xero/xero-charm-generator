@@ -88,7 +88,6 @@ COLOUR RULES:
 - Never use: brown, grey, black fills, desaturated tones, or colours outside the Xero palette`
   }
 
-  // Default Option B — real-world colour outside palette
   return `COLOUR FOR THIS CHARM: This object's real-world colour does not exist in the Xero palette.
 Use Xero mid-blue #4A9FD4 as the dominant colour regardless of the object's real-world colour.
 Example: a coffee mug or candle — render in Xero mid-blue #4A9FD4, not cream, white or brown.
@@ -104,21 +103,6 @@ COLOUR RULES:
 - Never use: brown, grey, black fills, desaturated tones, or any colour outside the Xero palette`
 }
 
-async function pollRun(runId, maxAttempts = 30) {
-  const url = `${FLORA_BASE}/api/v1/techniques/${TECHNIQUE_SLUG}/runs/${runId}`
-  const headers = { Authorization: `Bearer ${process.env.FLORA_API_KEY}` }
-
-  for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(r => setTimeout(r, 3000))
-    const res = await fetch(url, { headers })
-    const data = await res.json()
-
-    if (data.status === 'completed') return data
-    if (data.status === 'failed') throw new Error(data.errorMessage || 'Generation failed')
-  }
-  throw new Error('Timed out waiting for generation')
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -131,13 +115,11 @@ export default async function handler(req, res) {
   try {
     const prompt = buildPrompt({ subject, colourOption: colourOption || 'B', colourDetail })
 
-    // Build inputs — text prompt + reference charm image
     const inputs = [
       { id: 'text-prompt', type: 'text', value: prompt },
       { id: 'coin-illustration', type: 'imageUrl', value: referenceImageUrl },
     ]
 
-    // Create run
     const createRes = await fetch(`${FLORA_BASE}/api/v1/techniques/${TECHNIQUE_SLUG}/runs`, {
       method: 'POST',
       headers: {
@@ -147,32 +129,20 @@ export default async function handler(req, res) {
       body: JSON.stringify({ inputs, mode: 'async' }),
     })
 
-    if (!createRes.ok) {
-      const text = await createRes.text()
-      console.error('Flora create run error:', createRes.status, text)
-      let msg = 'Failed to create run'
-      try { msg = JSON.parse(text)?.error?.message || msg } catch {}
-      throw new Error(msg)
-    }
-
-    const runText = await createRes.text()
-    console.log('Flora create run response:', runText)
+    const text = await createRes.text()
     let run
-    try { run = JSON.parse(runText) } catch {
-      throw new Error('Flora returned invalid response: ' + runText.slice(0, 100))
+    try { run = JSON.parse(text) } catch {
+      throw new Error('Flora returned invalid response: ' + text.slice(0, 100))
     }
 
-    // Poll for result
-    const result = await pollRun(run.runId)
+    if (!createRes.ok) {
+      throw new Error(run.error?.message || 'Failed to create run')
+    }
 
-    // Extract all 4 image URLs
-    const images = ['image', 'image-2', 'image-3', 'image-4']
-      .map(id => result.outputs.find(o => o.outputId === id)?.url)
-      .filter(Boolean)
-
-    return res.status(200).json({ images, prompt })
+    // Return runId immediately — client will poll
+    return res.status(200).json({ runId: run.runId, prompt })
   } catch (err) {
-    console.error('Generation error:', err)
+    console.error('Generate error:', err)
     return res.status(500).json({ error: err.message || 'Something went wrong' })
   }
 }
