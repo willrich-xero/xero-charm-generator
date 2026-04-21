@@ -148,11 +148,19 @@ export default async function handler(req, res) {
     })
 
     if (!createRes.ok) {
-      const err = await createRes.json()
-      throw new Error(err.error?.message || 'Failed to create run')
+      const text = await createRes.text()
+      console.error('Flora create run error:', createRes.status, text)
+      let msg = 'Failed to create run'
+      try { msg = JSON.parse(text)?.error?.message || msg } catch {}
+      throw new Error(msg)
     }
 
-    const run = await createRes.json()
+    const runText = await createRes.text()
+    console.log('Flora create run response:', runText)
+    let run
+    try { run = JSON.parse(runText) } catch {
+      throw new Error('Flora returned invalid response: ' + runText.slice(0, 100))
+    }
 
     // Poll for result
     const result = await pollRun(run.runId)

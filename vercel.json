@@ -1,6 +1,12 @@
 {
   "functions": {
     "pages/api/generate.js": {
+      "maxDuration": 300
+    },
+    "pages/api/upload.js": {
+      "maxDuration": 30
+    },
+    "pages/api/enhance.js": {
       "maxDuration": 60
     }
   }
