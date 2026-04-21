@@ -859,3 +859,192 @@
 .selectBtn:hover {
   background: rgba(255,255,255,0.15);
 }
+
+/* Charm gallery */
+.charmSearch {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.625rem 1rem;
+  color: var(--white);
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+
+.charmSearch:focus {
+  border-color: var(--border-hover);
+}
+
+.charmSearch::placeholder {
+  color: var(--text-muted);
+}
+
+.charmGalleryWrap {
+  position: relative;
+}
+
+.charmGallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.charmItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px 8px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.charmItem:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--border);
+}
+
+.charmItemSelected {
+  border-color: var(--xero-blue) !important;
+  background: rgba(62, 204, 255, 0.08) !important;
+}
+
+.charmItemSuggested {
+  border-color: var(--gold) !important;
+  background: rgba(253, 204, 8, 0.06) !important;
+}
+
+.charmImgWrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.charmImg {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.charmSuggestedBadge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #000;
+  white-space: nowrap;
+}
+
+.charmLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.3;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.charmItem:hover .charmLabel,
+.charmItemSelected .charmLabel {
+  color: var(--text-secondary);
+}
+
+.charmNoResults {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 1rem;
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+/* Charm preview panel */
+.charmPreview {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 12px);
+  pointer-events: auto;
+  width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border-hover);
+  border-radius: 16px;
+  padding: 1.25rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.charmPreviewImg {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.charmPreviewName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+  text-align: center;
+}
+
+.charmPreviewMeta {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.charmPreviewSelect {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--xui-blue);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.charmPreviewSelect:hover {
+  background: #2571e8;
+}
+
+.charmPreviewSelected {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(62, 204, 255, 0.4);
+  background: rgba(62, 204, 255, 0.1);
+  color: var(--xero-blue);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}

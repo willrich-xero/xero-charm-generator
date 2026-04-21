@@ -2,90 +2,70 @@ import { useState, useRef, useEffect } from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 
-const VERSION = 'v0.2'
+const VERSION = 'v0.3'
+
+const CHARMS = [
+  { slug: 'alarm-bell', label: 'Alarm bell' },
+  { slug: 'battery-low', label: 'Battery low' },
+  { slug: 'beach-chair', label: 'Beach chair' },
+  { slug: 'broken-chain', label: 'Broken chain' },
+  { slug: 'calendar-cross', label: 'Calendar cross' },
+  { slug: 'calendar-tick', label: 'Calendar tick' },
+  { slug: 'cash-note', label: 'Cash note' },
+  { slug: 'chain', label: 'Chain' },
+  { slug: 'chart-growth', label: 'Chart growth' },
+  { slug: 'chart-pie', label: 'Chart pie' },
+  { slug: 'click-hand', label: 'Click hand' },
+  { slug: 'clock-melt', label: 'Clock melt' },
+  { slug: 'clock', label: 'Clock' },
+  { slug: 'cocktail-glass', label: 'Cocktail glass' },
+  { slug: 'coconut-drink', label: 'Coconut drink' },
+  { slug: 'coffee-mug', label: 'Coffee mug' },
+  { slug: 'coins-face', label: 'Coins face' },
+  { slug: 'coins', label: 'Coins' },
+  { slug: 'flame', label: 'Flame' },
+  { slug: 'hourglass', label: 'Hourglass' },
+  { slug: 'light-bulb', label: 'Light bulb' },
+  { slug: 'lock', label: 'Lock' },
+  { slug: 'meter', label: 'Meter' },
+  { slug: 'paper-plane', label: 'Paper plane' },
+  { slug: 'paperwork', label: 'Paperwork' },
+  { slug: 'percent', label: 'Percent' },
+  { slug: 'relationship-heart', label: 'Relationship heart' },
+  { slug: 'sparkle', label: 'Sparkle' },
+  { slug: 'speech-bubbles', label: 'Speech bubbles' },
+  { slug: 'stopwatch', label: 'Stopwatch' },
+  { slug: 'tax-weight', label: 'Tax weight' },
+  { slug: 'thumbs-up', label: 'Thumbs up' },
+  { slug: 'tick', label: 'Tick' },
+]
 
 const COLOUR_OPTIONS = [
-  {
-    id: 'B',
-    label: 'Auto blue',
-    description: 'No Xero palette equivalent (wood, ceramic, concrete…)',
-    swatch: '#4A9FD4',
-    detail: null,
-  },
-  {
-    id: 'A-gold',
-    label: 'Gold',
-    description: 'Coins, money, stars, premium elements',
-    swatch: '#FDCC08',
-    detail: 'Gold #FDCC08 — use for coins, money, stars, premium elements',
-    option: 'A',
-  },
-  {
-    id: 'A-coral',
-    label: 'Coral',
-    description: 'Alerts, emotion, leisure, relationships',
-    swatch: '#FF719B',
-    detail: 'Coral #FF719B — use for alerts, emotion, leisure, relationships',
-    option: 'A',
-  },
-  {
-    id: 'A-mint',
-    label: 'Mint',
-    description: 'Success, growth, nature, money notes',
-    swatch: '#6AEAAA',
-    detail: 'Mint #6AEAAA — use for success, growth, nature, money notes',
-    option: 'A',
-  },
-  {
-    id: 'C-purple',
-    label: 'Purple',
-    description: 'Creative, magical, percentage',
-    swatch: '#CF89FE',
-    detail: 'Purple #CF89FE',
-    option: 'C',
-  },
-  {
-    id: 'C-orange',
-    label: 'Orange',
-    description: 'Fire, energy, urgency only',
-    swatch: '#E99000',
-    detail: 'Orange #E99000 — use only for fire, energy, urgency',
-    option: 'C',
-  },
+  { id: 'B', label: 'Auto blue', description: 'No Xero palette equivalent (wood, ceramic, concrete…)', swatch: '#4A9FD4', detail: null },
+  { id: 'A-gold', label: 'Gold', description: 'Coins, money, stars, premium elements', swatch: '#FDCC08', detail: 'Gold #FDCC08 — use for coins, money, stars, premium elements', option: 'A' },
+  { id: 'A-coral', label: 'Coral', description: 'Alerts, emotion, leisure, relationships', swatch: '#FF719B', detail: 'Coral #FF719B — use for alerts, emotion, leisure, relationships', option: 'A' },
+  { id: 'A-mint', label: 'Mint', description: 'Success, growth, nature, money notes', swatch: '#6AEAAA', detail: 'Mint #6AEAAA — use for success, growth, nature, money notes', option: 'A' },
+  { id: 'C-purple', label: 'Purple', description: 'Creative, magical, percentage', swatch: '#CF89FE', detail: 'Purple #CF89FE', option: 'C' },
+  { id: 'C-orange', label: 'Orange', description: 'Fire, energy, urgency only', swatch: '#E99000', detail: 'Orange #E99000 — use only for fire, energy, urgency', option: 'C' },
 ]
 
 const COLOUR_LABEL_TO_ID = {
-  'auto blue': 'B',
-  'gold': 'A-gold',
-  'coral': 'A-coral',
-  'mint': 'A-mint',
-  'purple': 'C-purple',
-  'orange': 'C-orange',
+  'auto blue': 'B', 'gold': 'A-gold', 'coral': 'A-coral',
+  'mint': 'A-mint', 'purple': 'C-purple', 'orange': 'C-orange',
 }
 
-const EXAMPLE_SUBJECTS = [
-  'piggy bank',
-  'alarm clock',
-  'house',
-  'rocket ship',
-  'trophy',
-  'plant',
-]
-
-const LOADING_MESSAGES = [
-  'Assembling your charm prompt…',
-  'Uploading reference image…',
-  'Generating your charms…',
-  'Almost there…',
-]
+const EXAMPLE_SUBJECTS = ['piggy bank', 'alarm clock', 'house', 'rocket ship', 'trophy', 'plant']
+const LOADING_MESSAGES = ['Assembling your charm prompt…', 'Uploading reference image…', 'Generating your charms…', 'Almost there…']
 
 export default function Home() {
   const [subject, setSubject] = useState('')
   const [enhancedSubject, setEnhancedSubject] = useState('')
   const [selectedColour, setSelectedColour] = useState('B')
   const [recommendedColour, setRecommendedColour] = useState(null)
-  const [referenceFile, setReferenceFile] = useState(null)
-  const [referencePreview, setReferencePreview] = useState(null)
+  const [selectedCharm, setSelectedCharm] = useState(null)
+  const [suggestedCharm, setSuggestedCharm] = useState(null)
+  const [previewCharm, setPreviewCharm] = useState(null)
+  const [charmSearch, setCharmSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [enhancing, setEnhancing] = useState(false)
   const [images, setImages] = useState([])
@@ -95,10 +75,9 @@ export default function Home() {
   const [loadingStep, setLoadingStep] = useState(0)
   const [fullPrompt, setFullPrompt] = useState(null)
   const [promptExpanded, setPromptExpanded] = useState(false)
-  const fileInputRef = useRef(null)
-  const dropRef = useRef(null)
+  const [enhancePrompt, setEnhancePrompt] = useState(null)
+  const [enhancePromptExpanded, setEnhancePromptExpanded] = useState(false)
 
-  // Close lightbox on escape
   useEffect(() => {
     function handleKey(e) {
       if (e.key === 'Escape') setLightboxImage(null)
@@ -107,53 +86,33 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
-  function handleFileChange(file) {
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file (PNG, JPG, WebP)')
-      return
-    }
-    setReferenceFile(file)
-    setError(null)
-    const reader = new FileReader()
-    reader.onload = e => setReferencePreview(e.target.result)
-    reader.readAsDataURL(file)
-  }
-
-  function handleDrop(e) {
-    e.preventDefault()
-    dropRef.current?.classList.remove(styles.dropZoneOver)
-    handleFileChange(e.dataTransfer.files[0])
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault()
-    dropRef.current?.classList.add(styles.dropZoneOver)
-  }
-
-  function handleDragLeave() {
-    dropRef.current?.classList.remove(styles.dropZoneOver)
-  }
+  const filteredCharms = charmSearch.trim()
+    ? CHARMS.filter(c => c.label.toLowerCase().includes(charmSearch.toLowerCase()))
+    : CHARMS
 
   async function handleEnhance() {
     if (!subject.trim()) return
     setEnhancing(true)
     setError(null)
+    setSuggestedCharm(null)
     try {
       const res = await fetch('/api/enhance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, mode: 'both' }),
+        body: JSON.stringify({ subject }),
       })
       const data = await res.json()
+      if (res.status === 503) throw new Error('Enhance is only available on Xero VPN')
       if (!res.ok) throw new Error(data.error || 'Enhancement failed')
       if (data.enhanced) setEnhancedSubject(data.enhanced)
+      if (data.prompt) setEnhancePrompt(data.prompt)
       if (data.colour) {
         const id = COLOUR_LABEL_TO_ID[data.colour.toLowerCase()]
-        if (id) {
-          setRecommendedColour(id)
-          setSelectedColour(id)
-        }
+        if (id) { setRecommendedColour(id); setSelectedColour(id) }
+      }
+      if (data.charm) {
+        setSuggestedCharm(data.charm)
+        setSelectedCharm(data.charm)
       }
     } catch (err) {
       setError(err.message)
@@ -162,23 +121,23 @@ export default function Home() {
     }
   }
 
-  async function uploadReferenceImage(file) {
-    const res = await fetch('/api/upload', {
+  async function getCharmImageUrl(slug) {
+    // Convert the public charm PNG to a blob URL we can upload to ImageKit
+    const res = await fetch(`/charms/${slug}.png`)
+    const blob = await res.blob()
+    const uploadRes = await fetch('/api/upload', {
       method: 'POST',
-      headers: { 'Content-Type': file.type },
-      body: file,
+      headers: { 'Content-Type': 'image/png' },
+      body: blob,
     })
-    if (!res.ok) {
-      const err = await res.json()
-      throw new Error(err.error || 'Failed to upload reference image')
-    }
-    const data = await res.json()
+    if (!uploadRes.ok) throw new Error('Failed to upload reference charm')
+    const data = await uploadRes.json()
     return data.url
   }
 
   async function handleGenerate() {
     const subjectToUse = enhancedSubject || subject
-    if (!subjectToUse.trim() || !referenceFile) return
+    if (!subjectToUse.trim() || !selectedCharm) return
     setLoading(true)
     setImages([])
     setError(null)
@@ -192,7 +151,7 @@ export default function Home() {
     }, 7000)
 
     try {
-      const referenceImageUrl = await uploadReferenceImage(referenceFile)
+      const referenceImageUrl = await getCharmImageUrl(selectedCharm)
       const colourConfig = COLOUR_OPTIONS.find(c => c.id === selectedColour)
 
       const res = await fetch('/api/generate', {
@@ -226,14 +185,8 @@ export default function Home() {
     a.click()
   }
 
-  function clearReference() {
-    setReferenceFile(null)
-    setReferencePreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
   const subjectToUse = enhancedSubject || subject
-  const canGenerate = subjectToUse.trim() && referenceFile && !loading
+  const canGenerate = subjectToUse.trim() && selectedCharm && !loading
 
   return (
     <>
@@ -243,7 +196,6 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Lightbox */}
       {lightboxImage && (
         <div className={styles.lightbox} onClick={() => setLightboxImage(null)}>
           <button className={styles.lightboxClose} onClick={() => setLightboxImage(null)}>
@@ -251,16 +203,8 @@ export default function Home() {
               <path d="M2 2l16 16M18 2L2 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          <img
-            src={lightboxImage}
-            alt="Charm enlarged"
-            className={styles.lightboxImg}
-            onClick={e => e.stopPropagation()}
-          />
-          <button
-            className={styles.lightboxDownload}
-            onClick={e => { e.stopPropagation(); handleDownload(lightboxImage) }}
-          >
+          <img src={lightboxImage} alt="Charm enlarged" className={styles.lightboxImg} onClick={e => e.stopPropagation()} />
+          <button className={styles.lightboxDownload} onClick={e => { e.stopPropagation(); handleDownload(lightboxImage) }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -270,7 +214,6 @@ export default function Home() {
       )}
 
       <div className={styles.page}>
-        {/* Header */}
         <header className={styles.header}>
           <div className={styles.headerInner}>
             <div className={styles.logo}>
@@ -288,68 +231,15 @@ export default function Home() {
 
         <main className={styles.main}>
           <div className={styles.hero}>
-            <h1 className={styles.heroTitle}>
-              Create a new<br />
-              <em>charm</em>
-            </h1>
-            <p className={styles.heroSub}>
-              Upload a reference charm, describe your object, and we'll generate four on-brand options.
-            </p>
+            <h1 className={styles.heroTitle}>Create a new<br /><em>charm</em></h1>
+            <p className={styles.heroSub}>Describe your object, pick a reference charm, and we'll generate four on-brand options.</p>
           </div>
 
           <div className={styles.formCard}>
 
-            {/* Reference image */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                Reference charm
-                <span className={styles.fieldHint}>Upload an existing charm similar in shape or colour</span>
-              </label>
-              {referencePreview ? (
-                <div className={styles.referencePreviewWrap}>
-                  <img src={referencePreview} alt="Reference charm" className={styles.referencePreview} />
-                  <div className={styles.referenceInfo}>
-                    <span className={styles.referenceFilename}>{referenceFile.name}</span>
-                    <span className={styles.referenceHint}>Used as a visual style reference — the model will not copy this object</span>
-                  </div>
-                  <button className={styles.clearBtn} onClick={clearReference} title="Remove">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <div
-                  ref={dropRef}
-                  className={styles.dropZone}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={styles.uploadIcon}>
-                    <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M8 12l4-4 4 4M12 8v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className={styles.dropZoneText}>Drop a charm image here</span>
-                  <span className={styles.dropZoneSubtext}>or click to browse · PNG, JPG, WebP</span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className={styles.hiddenInput}
-                    onChange={e => handleFileChange(e.target.files[0])}
-                  />
-                </div>
-              )}
-            </div>
-
             {/* Subject */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                What should the charm represent?
-              </label>
-
+              <label className={styles.fieldLabel}>What should the charm represent?</label>
               <div className={styles.subjectRow}>
                 <input
                   className={styles.subjectInput}
@@ -359,6 +249,8 @@ export default function Home() {
                     setSubject(e.target.value)
                     setEnhancedSubject('')
                     setRecommendedColour(null)
+                    setSuggestedCharm(null)
+                    setEnhancePrompt(null)
                   }}
                   onKeyDown={e => { if (e.key === 'Enter') handleEnhance() }}
                 />
@@ -366,11 +258,9 @@ export default function Home() {
                   className={styles.enhanceBtn}
                   onClick={handleEnhance}
                   disabled={!subject.trim() || enhancing}
-                  title="Let AI expand your description and suggest a colour"
+                  title="Let AI expand your description, suggest a colour and pick the closest reference charm"
                 >
-                  {enhancing ? (
-                    <span className={styles.spinnerSmall} />
-                  ) : (
+                  {enhancing ? <span className={styles.spinnerSmall} /> : (
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path d="M7 1l1.2 3.8L12 6l-3.8 1.2L7 11l-1.2-3.8L2 6l3.8-1.2L7 1z" fill="currentColor"/>
                     </svg>
@@ -379,7 +269,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Enhanced result */}
               {enhancedSubject && (
                 <div className={styles.enhancedResult}>
                   <div className={styles.enhancedLabel}>
@@ -389,33 +278,100 @@ export default function Home() {
                     Enhanced description
                   </div>
                   <p className={styles.enhancedText}>{enhancedSubject}</p>
-                  <button
-                    className={styles.enhancedEdit}
-                    onClick={() => {
-                      setSubject(enhancedSubject)
-                      setEnhancedSubject('')
-                    }}
-                  >
-                    Edit
+                  <button className={styles.enhancedEdit} onClick={() => { setSubject(enhancedSubject); setEnhancedSubject('') }}>Edit</button>
+                </div>
+              )}
+
+              {enhancePrompt && (
+                <div className={styles.promptSection}>
+                  <button className={styles.promptToggle} onClick={() => setEnhancePromptExpanded(p => !p)}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: enhancePromptExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
+                      <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {enhancePromptExpanded ? 'Hide' : 'View'} prompt sent to Flora
                   </button>
+                  {enhancePromptExpanded && <pre className={styles.promptBox}>{enhancePrompt}</pre>}
                 </div>
               )}
 
               <div className={styles.examples}>
                 <span className={styles.examplesLabel}>Try:</span>
                 {EXAMPLE_SUBJECTS.map(ex => (
-                  <button
-                    key={ex}
-                    className={styles.exampleChip}
-                    onClick={() => {
-                      setSubject(ex)
-                      setEnhancedSubject('')
-                      setRecommendedColour(null)
-                    }}
-                  >
+                  <button key={ex} className={styles.exampleChip} onClick={() => { setSubject(ex); setEnhancedSubject(''); setRecommendedColour(null); setSuggestedCharm(null) }}>
                     {ex}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Reference charm gallery */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>
+                Reference charm
+                <span className={styles.fieldHint}>
+                  {suggestedCharm ? 'AI suggested — click any charm to change' : 'Select the charm most similar in shape to your object'}
+                </span>
+              </label>
+
+              <input
+                className={styles.charmSearch}
+                placeholder="Search charms…"
+                value={charmSearch}
+                onChange={e => setCharmSearch(e.target.value)}
+              />
+
+              <div className={styles.charmGalleryWrap}>
+                <div className={styles.charmGallery}>
+                {filteredCharms.map(charm => (
+                  <button
+                    key={charm.slug}
+                    className={`${styles.charmItem} ${selectedCharm === charm.slug ? styles.charmItemSelected : ''} ${suggestedCharm === charm.slug && selectedCharm === charm.slug ? styles.charmItemSuggested : ''}`}
+                    onClick={() => setSelectedCharm(charm.slug)}
+                    onMouseEnter={() => setPreviewCharm(charm)}
+                    onMouseLeave={() => setPreviewCharm(null)}
+                    title={charm.label}
+                  >
+                    <div className={styles.charmImgWrap}>
+                      <img
+                        src={`/charms/${charm.slug}.png`}
+                        alt={charm.label}
+                        className={styles.charmImg}
+                      />
+                      {suggestedCharm === charm.slug && (
+                        <span className={styles.charmSuggestedBadge}>AI pick</span>
+                      )}
+                    </div>
+                    <span className={styles.charmLabel}>{charm.label}</span>
+                  </button>
+                ))}
+                {filteredCharms.length === 0 && (
+                  <p className={styles.charmNoResults}>No charms match "{charmSearch}"</p>
+                )}
+                </div>
+
+              {previewCharm && (
+                <div className={styles.charmPreview} onMouseEnter={() => setPreviewCharm(previewCharm)} onMouseLeave={() => setPreviewCharm(null)}>
+                  <img
+                    src={`/charms/${previewCharm.slug}.png`}
+                    alt={previewCharm.label}
+                    className={styles.charmPreviewImg}
+                  />
+                  <p className={styles.charmPreviewName}>{previewCharm.label}</p>
+                  {suggestedCharm === previewCharm.slug && (
+                    <p className={styles.charmPreviewMeta}>✦ AI suggested match</p>
+                  )}
+                  {selectedCharm === previewCharm.slug ? (
+                    <div className={styles.charmPreviewSelected}>✓ Selected</div>
+                  ) : (
+                    <button
+                      className={styles.charmPreviewSelect}
+                      onClick={() => { setSelectedCharm(previewCharm.slug); setPreviewCharm(null) }}
+                    >
+                      Use this charm
+                    </button>
+                  )}
+                </div>
+              )}
               </div>
             </div>
 
@@ -436,9 +392,7 @@ export default function Home() {
                   >
                     <div className={styles.colourTop}>
                       <span className={styles.colourSwatch} style={{ background: opt.swatch }} />
-                      {recommendedColour === opt.id && (
-                        <span className={styles.recommendedBadge}>Suggested</span>
-                      )}
+                      {recommendedColour === opt.id && <span className={styles.recommendedBadge}>Suggested</span>}
                     </div>
                     <span className={styles.colourLabel}>{opt.label}</span>
                     <span className={styles.colourDesc}>{opt.description}</span>
@@ -450,17 +404,14 @@ export default function Home() {
             {/* Generate */}
             <button className={styles.generateBtn} onClick={handleGenerate} disabled={!canGenerate}>
               {loading ? (
-                <>
-                  <span className={styles.spinner} />
-                  {LOADING_MESSAGES[loadingStep]}
-                </>
+                <><span className={styles.spinner} />{LOADING_MESSAGES[loadingStep]}</>
               ) : (
                 <>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5L8 1z" fill="currentColor"/>
                   </svg>
                   Generate charms
-                  {!referenceFile && <span className={styles.btnHint}> — upload a reference first</span>}
+                  {!selectedCharm && <span className={styles.btnHint}> — select a reference charm first</span>}
                 </>
               )}
             </button>
@@ -475,26 +426,19 @@ export default function Home() {
               </div>
             )}
 
-            {/* Prompt viewer */}
             {fullPrompt && (
               <div className={styles.promptSection}>
-                <button
-                  className={styles.promptToggle}
-                  onClick={() => setPromptExpanded(p => !p)}
-                >
+                <button className={styles.promptToggle} onClick={() => setPromptExpanded(p => !p)}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: promptExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
                     <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   {promptExpanded ? 'Hide' : 'View'} full prompt sent to Flora
                 </button>
-                {promptExpanded && (
-                  <pre className={styles.promptBox}>{fullPrompt}</pre>
-                )}
+                {promptExpanded && <pre className={styles.promptBox}>{fullPrompt}</pre>}
               </div>
             )}
           </div>
 
-          {/* Loading */}
           {loading && (
             <div className={styles.loadingSection}>
               <div className={styles.loadingGrid}>
@@ -508,7 +452,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Results */}
           {images.length > 0 && !loading && (
             <div className={styles.results}>
               <div className={styles.resultsHeader}>
@@ -525,10 +468,7 @@ export default function Home() {
                     <img src={url} alt={`Charm option ${i + 1}`} className={styles.charmImage} />
                     <div className={styles.imageOverlay}>
                       <span className={styles.imageNum}>Option {i + 1}</span>
-                      <button
-                        className={styles.selectBtn}
-                        onClick={e => { e.stopPropagation(); setSelectedImage(i) }}
-                      >
+                      <button className={styles.selectBtn} onClick={e => { e.stopPropagation(); setSelectedImage(i) }}>
                         {selectedImage === i ? '✓ Selected' : 'Select'}
                       </button>
                     </div>
